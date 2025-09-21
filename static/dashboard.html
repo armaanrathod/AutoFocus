@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚗 Enhanced Driver Monitor Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .card-title {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #ff4444;
+            animation: pulse 2s infinite;
+        }
+
+        .status-indicator.active {
+            background: #44ff44;
+        }
+
+        .status-indicator.warning {
+            background: #ffaa44;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+
+        .metric-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-bottom: 5px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #44ff44, #ffaa44, #ff4444);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            border: 2px solid transparent;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #44ff44, #66ff66);
+            color: #000;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(45deg, #66ff66, #88ff88);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(68, 255, 68, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(45deg, #ff4444, #ff6666);
+            color: #fff;
+        }
+
+        .btn-danger:hover {
+            background: linear-gradient(45deg, #ff6666, #ff8888);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 68, 68, 0.4);
+        }
+
+        .alerts-list {
+            max-height: 300px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255,255,255,0.3) transparent;
+        }
+
+        .alert-item {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-left: 4px solid #ff4444;
+        }
+
+        .alert-item.medium {
+            border-left-color: #ffaa44;
+        }
+
+        .alert-item.low {
+            border-left-color: #44aaff;
+        }
+
+        .alert-time {
+            font-size: 0.8rem;
+            opacity: 0.7;
+            margin-bottom: 5px;
+        }
+
+        .chart-container {
+            height: 200px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .chart-title {
+            font-size: 1rem;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .chart-canvas {
+            width: 100%;
+            height: 160px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .connection-status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .connected {
+            background: rgba(68, 255, 68, 0.2);
+            color: #44ff44;
+        }
+
+        .disconnected {
+            background: rgba(255, 68, 68, 0.2);
+            color: #ff4444;
+        }
+
+        .eye-visualization {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .eye {
+            width: 60px;
+            height: 30px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50px;
+            position: relative;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .iris {
+            width: 20px;
+            height: 20px;
+            background: #44aaff;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            transition: all 0.3s ease;
+            box-shadow: 0 0 10px rgba(68, 170, 255, 0.5);
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .controls {
+                justify-content: center;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="connection-status" id="connectionStatus">
+        <span id="connectionText">Connecting...</span>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1>🚗 Enhanced Driver Monitor Dashboard</h1>
+            <p>Real-time AI-powered driver monitoring with advanced analytics</p>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-primary" onclick="startMonitoring()">
+                📹 Start Monitoring
+            </button>
+            <button class="btn btn-danger" onclick="stopMonitoring()">
+                ⏹️ Stop Monitoring
+            </button>
+        </div>
+
+        <div class="dashboard-grid">
+            <!-- Monitoring Status Card -->
+            <div class="card">
+                <div class="card-title">
+                    <span class="status-indicator" id="monitoringStatus"></span>
+                    📊 Monitoring Status
+                </div>
+                <div class="metric-value" id="sessionDuration">00:00:00</div>
+                <div class="metric-label">Session Duration</div>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-value" id="totalAlerts">0</div>
+                        <div class="stat-label">Total Alerts</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="sessionId">-</div>
+                        <div class="stat-label">Session ID</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Eye Monitoring Card -->
+            <div class="card">
+                <div class="card-title">
+                    👁️ Eye Monitoring
+                </div>
+                <div class="metric-value" id="earValue">0.000</div>
+                <div class="metric-label">Eye Aspect Ratio (EAR)</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="earProgress" style="width: 0%"></div>
+                </div>
+                <div class="eye-visualization">
+                    <div class="eye">
+                        <div class="iris" id="leftIris"></div>
+                    </div>
+                    <div class="eye">
+                        <div class="iris" id="rightIris"></div>
+                    </div>
+                </div>
+                <div style="text-align: center; margin-top: 10px;">
+                    <strong id="eyeState">Center</strong>
+                </div>
+            </div>
+
+            <!-- Head Pose Card -->
+            <div class="card">
+                <div class="card-title">
+                    🎯 Head Pose Tracking
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+                    <div style="text-align: center;">
+                        <div class="metric-value" id="yawValue" style="font-size: 1.8rem;">0.0°</div>
+                        <div class="metric-label">Yaw (Left/Right)</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div class="metric-value" id="pitchValue" style="font-size: 1.8rem;">0.0°</div>
+                        <div class="metric-label">Pitch (Up/Down)</div>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-title">Head Movement History</div>
+                    <canvas class="chart-canvas" id="headPoseChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Recent Alerts Card -->
+            <div class="card">
+                <div class="card-title">
+                    ⚠️ Recent Alerts
+                </div>
+                <div class="alerts-list" id="alertsList">
+                    <div style="text-align: center; opacity: 0.6; padding: 20px;">
+                        No alerts yet - monitoring system ready
+                    </div>
+                </div>
+            </div>
+
+            <!-- EAR History Chart -->
+            <div class="card">
+                <div class="card-title">
+                    📈 Drowsiness Trend
+                </div>
+                <div class="chart-container">
+                    <div class="chart-title">Eye Aspect Ratio Over Time</div>
+                    <canvas class="chart-canvas" id="earChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Alert Statistics -->
+            <div class="card">
+                <div class="card-title">
+                    📊 Alert Statistics
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-value" id="drowsyAlerts">0</div>
+                        <div class="stat-label">Drowsy</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="distractionAlerts">0</div>
+                        <div class="stat-label">Distraction</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="headAlerts">0</div>
+                        <div class="stat-label">Head Pose</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="avgEar">0.000</div>
+                        <div class="stat-label">Avg EAR</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // WebSocket connection
+        let ws = null;
+        let isMonitoring = false;
+        let currentSessionId = null;
+
+        // Chart data arrays
+        let earHistory = [];
+        let headPoseHistory = [];
+        let timeLabels = [];
+        const MAX_DATA_POINTS = 50;
+
+        // Initialize WebSocket connection
+        function connectWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}/ws`;
+            
+            ws = new WebSocket(wsUrl);
+            
+            ws.onopen = function() {
+                console.log('WebSocket connected');
+                document.getElementById('connectionStatus').className = 'connection-status connected';
+                document.getElementById('connectionText').textContent = 'Connected';
+            };
+            
+            ws.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                handleWebSocketMessage(data);
+            };
+            
+            ws.onclose = function() {
+                console.log('WebSocket disconnected');
+                document.getElementById('connectionStatus').className = 'connection-status disconnected';
+                document.getElementById('connectionText').textContent = 'Disconnected';
+                
+                // Attempt to reconnect after 3 seconds
+                setTimeout(connectWebSocket, 3000);
+            };
+            
+            ws.onerror = function(error) {
+                console.error('WebSocket error:', error);
+            };
+        }
+
+        // Handle WebSocket messages
+        function handleWebSocketMessage(data) {
+            switch(data.type) {
+                case 'stats_update':
+                    updateStats(data.stats);
+                    break;
+                case 'alert':
+                    addAlert(data);
+                    break;
+                case 'monitoring_started':
+                    isMonitoring = true;
+                    currentSessionId = data.session_id;
+                    updateMonitoringStatus();
+                    break;
+                default:
+                    console.log('Unknown message type:', data.type);
+            }
+        }
+
+        // Update statistics display
+        function updateStats(stats) {
+            // Update EAR
+            document.getElementById('earValue').textContent = stats.ear.toFixed(3);
+            const earPercent = Math.min(stats.ear * 200, 100); // Scale EAR for progress bar
+            document.getElementById('earProgress').style.width = earPercent + '%';
+            
+            // Update eye state and visualization
+            document.getElementById('eyeState').textContent = stats.eye_state;
+            updateEyeVisualization(stats.eye_state);
+            
+            // Update head pose
+            document.getElementById('yawValue').textContent = stats.head_pose.yaw.toFixed(1) + '°';
+            document.getElementById('pitchValue').textContent = stats.head_pose.pitch.toFixed(1) + '°';
+            
+            // Update alerts count
+            document.getElementById('totalAlerts').textContent = stats.alerts_count;
+            
+            // Update session duration
+            if (stats.session_duration) {
+                const duration = formatDuration(stats.session_duration);
+                document.getElementById('sessionDuration').textContent = duration;
+            }
+            
+            // Update chart data
+            updateChartData(stats);
+        }
+
+        // Update eye visualization
+        function updateEyeVisualization(eyeState) {
+            const leftIris = document.getElementById('leftIris');
+            const rightIris = document.getElementById('rightIris');
+            
+            let irisPosition = '50%'; // Center position
+            
+            switch(eyeState) {
+                case 'Looking Left':
+                    irisPosition = '25%';
+                    break;
+                case 'Looking Right':
+                    irisPosition = '75%';
+                    break;
+                case 'Center':
+                default:
+                    irisPosition = '50%';
+                    break;
+            }
+            
+            leftIris.style.left = irisPosition;
+            rightIris.style.left = irisPosition;
+        }
+
+        // Update chart data
+        function updateChartData(stats) {
+            const now = new Date().toLocaleTimeString();
+            
+            // Add new data points
+            earHistory.push(stats.ear);
+            headPoseHistory.push({yaw: stats.head_pose.yaw, pitch: stats.head_pose.pitch});
+            timeLabels.push(now);
+            
+            // Limit data points
+            if (earHistory.length > MAX_DATA_POINTS) {
+                earHistory.shift();
+                headPoseHistory.shift();
+                timeLabels.shift();
+            }
+            
+            // Update charts
+            updateEarChart();
+            updateHeadPoseChart();
+        }
+
+        // Update EAR chart
+        function updateEarChart() {
+            const canvas = document.getElementById('earChart');
+            const ctx = canvas.getContext('2d');
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            if (earHistory.length < 2) return;
+            
+            // Set canvas size
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+            
+            const width = canvas.width;
+            const height = canvas.height;
+            const padding = 20;
+            
+            // Calculate scales
+            const maxEar = Math.max(...earHistory, 0.4);
+            const minEar = Math.min(...earHistory, 0.0);
+            const earRange = maxEar - minEar || 0.1;
+            
+            // Draw grid lines
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= 5; i++) {
+                const y = padding + (i / 5) * (height - 2 * padding);
+                ctx.beginPath();
+                ctx.moveTo(padding, y);
+                ctx.lineTo(width - padding, y);
+                ctx.stroke();
+            }
+            
+            // Draw EAR line
+            ctx.strokeStyle = '#44aaff';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            
+            for (let i = 0; i < earHistory.length; i++) {
+                const x = padding + (i / (earHistory.length - 1)) * (width - 2 * padding);
+                const y = height - padding - ((earHistory[i] - minEar) / earRange) * (height - 2 * padding);
+                
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            ctx.stroke();
+            
+            // Draw threshold line
+            const thresholdY = height - padding - ((0.25 - minEar) / earRange) * (height - 2 * padding);
+            ctx.strokeStyle = '#ff4444';
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(padding, thresholdY);
+            ctx.lineTo(width - padding, thresholdY);
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+
+        // Update head pose chart
+        function updateHeadPoseChart() {
+            const canvas = document.getElementById('headPoseChart');
+            const ctx = canvas.getContext('2d');
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            if (headPoseHistory.length < 2) return;
+            
+            // Set canvas size
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+            
+            const width = canvas.width;
+            const height = canvas.height;
+            const padding = 20;
+            
+            // Calculate scales
+            const yawValues = headPoseHistory.map(h => h.yaw);
+            const pitchValues = headPoseHistory.map(h => h.pitch);
+            const maxAngle = Math.max(...yawValues, ...pitchValues, 30);
+            const minAngle = Math.min(...yawValues, ...pitchValues, -30);
+            const angleRange = maxAngle - minAngle || 60;
+            
+            // Draw grid lines
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= 5; i++) {
+                const y = padding + (i / 5) * (height - 2 * padding);
+                ctx.beginPath();
+                ctx.moveTo(padding, y);
+                ctx.lineTo(width - padding, y);
+                ctx.stroke();
+            }
+            
+            // Draw yaw line
+            ctx.strokeStyle = '#44ff44';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            for (let i = 0; i < headPoseHistory.length; i++) {
+                const x = padding + (i / (headPoseHistory.length - 1)) * (width - 2 * padding);
+                const y = height - padding - ((headPoseHistory[i].yaw - minAngle) / angleRange) * (height - 2 * padding);
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+            
+            // Draw pitch line
+            ctx.strokeStyle = '#ffaa44';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            for (let i = 0; i < headPoseHistory.length; i++) {
+                const x = padding + (i / (headPoseHistory.length - 1)) * (width - 2 * padding);
+                const y = height - padding - ((headPoseHistory[i].pitch - minAngle) / angleRange) * (height - 2 * padding);
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+        }
+
+        // Add alert to the list
+        function addAlert(alertData) {
+            const alertsList = document.getElementById('alertsList');
+            
+            // Remove "no alerts" message
+            if (alertsList.innerHTML.includes('No alerts yet')) {
+                alertsList.innerHTML = '';
+            }
+            
+            const alertItem = document.createElement('div');
+            alertItem.className = `alert-item ${alertData.severity}`;
+            
+            const alertTime = new Date(alertData.timestamp).toLocaleTimeString();
+            
+            alertItem.innerHTML = `
+                <div class="alert-time">${alertTime}</div>
+                <div><strong>${alertData.alert_type.toUpperCase()}</strong></div>
+                <div>${alertData.message}</div>
+            `;
+            
+            // Add to top of list
+            alertsList.insertBefore(alertItem, alertsList.firstChild);
+            
+            // Limit to 10 alerts
+            while (alertsList.children.length > 10) {
+                alertsList.removeChild(alertsList.lastChild);
+            }
+        }
+
+        // Format duration in HH:MM:SS format
+        function formatDuration(seconds) {
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const secs = seconds % 60;
+            return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        // Update monitoring status indicator
+        function updateMonitoringStatus() {
+            const indicator = document.getElementById('monitoringStatus');
+            const sessionIdElement = document.getElementById('sessionId');
+            
+            if (isMonitoring) {
+                indicator.className = 'status-indicator active';
+                sessionIdElement.textContent = currentSessionId || '-';
+            } else {
+                indicator.className = 'status-indicator';
+                sessionIdElement.textContent = '-';
+            }
+        }
+
+        // Start monitoring
+        async function startMonitoring() {
+            try {
+                const response = await fetch('/api/start_monitoring', {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                
+                if (response.ok) {
+                    isMonitoring = true;
+                    currentSessionId = data.session_id;
+                    updateMonitoringStatus();
+                    console.log('Monitoring started, session ID:', currentSessionId);
+                } else {
+                    console.error('Failed to start monitoring:', data);
+                }
+            } catch (error) {
+                console.error('Error starting monitoring:', error);
+            }
+        }
+
+        // Stop monitoring
+        async function stopMonitoring() {
+            try {
+                const response = await fetch('/api/stop_monitoring', {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                
+                if (response.ok) {
+                    isMonitoring = false;
+                    currentSessionId = null;
+                    updateMonitoringStatus();
+                    console.log('Monitoring stopped');
+                } else {
+                    console.error('Failed to stop monitoring:', data);
+                }
+            } catch (error) {
+                console.error('Error stopping monitoring:', error);
+            }
+        }
+
+        // Fetch stats periodically
+        async function fetchStats() {
+            if (!isMonitoring) return;
+            
+            try {
+                const response = await fetch('/api/stats');
+                const stats = await response.json();
+                updateStats(stats);
+            } catch (error) {
+                console.error('Error fetching stats:', error);
+            }
+        }
+
+        // Initialize dashboard
+        function initDashboard() {
+            connectWebSocket();
+            
+            // Fetch stats every 2 seconds when not receiving WebSocket updates
+            setInterval(fetchStats, 2000);
+            
+            // Update charts on window resize
+            window.addEventListener('resize', () => {
+                setTimeout(() => {
+                    updateEarChart();
+                    updateHeadPoseChart();
+                }, 100);
+            });
+        }
+
+        // Start dashboard when page loads
+        document.addEventListener('DOMContentLoaded', initDashboard);
+    </script>
+</body>
+</html>
