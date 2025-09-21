@@ -1,0 +1,20 @@
+{
+  "name": "autofocus",
+  "version": "1.0.0",
+  "description": "A lightweight, software-only AI system for real-time driver distraction detection using standard webcams, with alerts, logging, and analytics.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/arshia-2010/AutoFocus.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/arshia-2010/AutoFocus/issues"
+  },
+  "homepage": "https://github.com/arshia-2010/AutoFocus#readme"
+}
